@@ -15,24 +15,20 @@ from src.utils import setup_logging
 
 logger = setup_logging()
 
-formatted_base_url = config.BASE_URL.rstrip('/')
-if formatted_base_url.endswith('/api'):
-    formatted_base_url = formatted_base_url.replace('/api', '/v1')
-elif not formatted_base_url.endswith('/v1'):
-    formatted_base_url = f"{formatted_base_url}/v1"
+# 1. Format the URL required for Ollama embeddings
+base_url = config.BASE_URL.rstrip('/')
+if base_url.endswith('/api'):
+    ollama_url = base_url.replace('/api', '/v1')
+elif not base_url.endswith('/v1'):
+    ollama_url = f"{base_url}/v1"
+else:
+    ollama_url = base_url
 
 
 model = OllamaModel(
     model_name=config.MODEL_NAME,
     provider=OllamaProvider(
-        base_url=formatted_base_url
-    )
-)
-
-embed = OllamaModel(
-    model_name=config.EMBED_MODEL,
-    provider=OllamaProvider(
-        base_url=config.BASE_URL
+        base_url=ollama_url
     )
 )
 
@@ -42,24 +38,16 @@ class Screening:
         self.agent = Agent(model=model,
                            instructions=SYSTEM_PROMPT,
                            output_type=ClassificationOutput)
-        # 1. Format the URL required for Ollama embeddings
-        base_url = config.BASE_URL.rstrip('/')
-        if base_url.endswith('/api'):
-            embed_url = base_url.replace('/api', '/v1')
-        elif not base_url.endswith('/v1'):
-            embed_url = f"{base_url}/v1"
-        else:
-            embed_url = base_url
 
         # 2. Tell the underlying client where to look
-        os.environ['OPENAI_BASE_URL'] = embed_url
+        os.environ['OPENAI_BASE_URL'] = ollama_url
         os.environ['OPENAI_API_KEY'] = 'ollama'
 
         # 3. Use the 'openai:' prefix to force the compatibility route
         self.embed = Embedder("openai:nomic-embed-text")
 
         # self.embed = Embedder(model="ollama:nomic-embed-text")
-        self.client = chromadb.Client()
+        self.client = chromadb.PersistentClient(path="src/chroma_db")
         self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
         self.collection = self.client.get_or_create_collection(
             name="sanctioned_entities",
