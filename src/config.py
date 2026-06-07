@@ -14,8 +14,9 @@ class Config:
     LOG_FILE: str = 'src/ass.log'
 
     # Ollama configuration
-    MODEL_NAME: str = "ollama:qwen2.5"
-    EMBED_MODEL: str = "ollama:nomic-embed-text"
+    MODEL_NAME: str = "qwen2.5:latest"
+    EMBED_MODEL: str = "nomic-text-embed:latest"
+    BASE_URL: str = "http://localhost:11434"
 
     TOP_K: int = 3
 
