@@ -42,7 +42,7 @@ class Screening:
         self.agent = Agent(model=model,
                            instructions=SYSTEM_PROMPT,
                            output_type=ClassificationOutput)
-        # 1. Format the URL for OpenAI compatibility (required for Ollama embeddings)
+        # 1. Format the URL required for Ollama embeddings
         base_url = config.BASE_URL.rstrip('/')
         if base_url.endswith('/api'):
             embed_url = base_url.replace('/api', '/v1')
